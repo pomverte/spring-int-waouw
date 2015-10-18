@@ -1,8 +1,7 @@
 # Spring Integration Waouw
 
-                             printPayload()
-                            /              \
-    Message -> |===input===|                -> |===output===|
-                            \              /
-                             printHeader()
-
+                                           printPayload()
+                                          /              \
+    chevron(i) -> Message -> |===input===|                -> |===output===|
+                                          \              /
+                                            printHeader()
