@@ -1,3 +1,8 @@
 # Spring Integration Waouw
 
-    Message -> |===input===| -> printPayload() -> |===output===|
+                             printPayload()
+                            /              \
+    Message -> |===input===|                -> |===output===|
+                            \              /
+                              printHeader()
+
