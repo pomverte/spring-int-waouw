@@ -1,5 +1,7 @@
 package com.fr.cgi.atp;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.springframework.boot.SpringApplication;
@@ -11,6 +13,7 @@ import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.annotation.Splitter;
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.PublishSubscribeChannel;
@@ -33,30 +36,42 @@ public class SpringIntWaouwApplication {
         ConfigurableApplicationContext context = SpringApplication.run(SpringIntWaouwApplication.class, args);
 
         StarGate stargate = context.getBean(StarGate.class);
-        for (int i = 0; i < 5; i++) {
-            stargate.chevron(i); // send message
-        }
+        stargate.chevron(0, 1, 2, 3, 4); // send message
         context.close(); // shutdown
     }
 
     @MessagingGateway
     public interface StarGate {
-        @Gateway(requestChannel="input")
-        void chevron(Integer value);
+        @Gateway(requestChannel = "input")
+        void chevron(Integer... value);
     }
 
     @Bean
     public MessageChannel input() {
+        return new DirectChannel();
+    }
+
+    @Splitter(inputChannel = "input", outputChannel = "fragment")
+    public List<Integer> banana(Integer... payload) {
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (Integer current : payload) {
+            result.add(current);
+        }
+        return result;
+    }
+
+    @Bean
+    public MessageChannel fragment() {
         return new PublishSubscribeChannel();
     }
 
-    @ServiceActivator(inputChannel = "input", outputChannel = "common")
+    @ServiceActivator(inputChannel = "fragment", outputChannel = "common")
     public Message<Integer> printPayload(Message<Integer> message) {
         log.debug("Payload : {}", message.getPayload());
         return message;
     }
 
-    @ServiceActivator(inputChannel = "input", outputChannel = "common")
+    @ServiceActivator(inputChannel = "fragment", outputChannel = "common")
     public Message<Integer> printHeaders(Message<Integer> message) {
         String headerPretty = "Header : ";
         for (Entry<String, Object> header : message.getHeaders().entrySet()) {
