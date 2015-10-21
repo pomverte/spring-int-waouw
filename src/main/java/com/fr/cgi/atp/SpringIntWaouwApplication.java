@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -31,7 +31,7 @@ public class SpringIntWaouwApplication {
 
     @Bean
     public MessageChannel input() {
-        return new DirectChannel();
+        return new PublishSubscribeChannel();
     }
 
     @ServiceActivator(inputChannel = "input", outputChannel = "output")
