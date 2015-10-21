@@ -11,10 +11,16 @@ import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.annotation.Transformer;
+import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.support.GenericMessage;
+
+import com.fr.cgi.atp.message.WaouwMessage;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,7 +73,13 @@ public class SpringIntWaouwApplication {
 
     @Bean
     public MessageChannel odd() {
-        return new QueueChannel();
+        return new DirectChannel();
+    }
+
+    @Transformer(inputChannel = "odd", outputChannel = "output")
+    public Object addUserName(@Payload Integer number) {
+        WaouwMessage payload = new WaouwMessage(number, "Hong Viet");
+        return new GenericMessage<WaouwMessage>(payload);
     }
 
     @Bean
