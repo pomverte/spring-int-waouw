@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.Gateway;
+import org.springframework.integration.annotation.InboundChannelAdapter;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.annotation.Splitter;
@@ -21,8 +24,10 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.GenericMessage;
+import org.springframework.social.twitter.api.Tweet;
 
 import com.fr.cgi.atp.message.WaouwMessage;
+import com.fr.cgi.atp.service.TwitterService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @SpringBootApplication
 @IntegrationComponentScan
 public class SpringIntWaouwApplication {
+
+    @Autowired
+    private TwitterService twitterService;
 
     public static void main(String[] args) {
         ConfigurableApplicationContext context = SpringApplication.run(SpringIntWaouwApplication.class, args);
@@ -43,6 +51,13 @@ public class SpringIntWaouwApplication {
     public interface StarGate {
         @Gateway(requestChannel = "input")
         void chevron(Integer... value);
+    }
+
+    // twitter inbound channel adapter with a poller
+    @InboundChannelAdapter(value = "fragment", poller = @Poller(fixedRate = "500", maxMessagesPerPoll = "3") )
+    public List<Tweet> twitterAdapter() {
+        log.debug("SpringIntWaouwApplication.twitterAdapter(TwitterService)");
+        return this.twitterService.getUserTimeline("vietnem");
     }
 
     @Splitter(inputChannel = "input", outputChannel = "fragment")
