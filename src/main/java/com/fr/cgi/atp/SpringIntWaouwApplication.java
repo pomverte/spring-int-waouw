@@ -15,7 +15,6 @@ import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.annotation.Splitter;
 import org.springframework.integration.annotation.Transformer;
-import org.springframework.integration.channel.DirectChannel;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
@@ -44,11 +43,6 @@ public class SpringIntWaouwApplication {
     public interface StarGate {
         @Gateway(requestChannel = "input")
         void chevron(Integer... value);
-    }
-
-    @Bean
-    public MessageChannel input() {
-        return new DirectChannel();
     }
 
     @Splitter(inputChannel = "input", outputChannel = "fragment")
@@ -84,11 +78,6 @@ public class SpringIntWaouwApplication {
     @Router(inputChannel = "common")
     public String oddOrEven(Message<Integer> message) {
         return message.getPayload() % 2 == 0 ? "output" : "odd";
-    }
-
-    @Bean
-    public MessageChannel odd() {
-        return new DirectChannel();
     }
 
     @Transformer(inputChannel = "odd", outputChannel = "output")
