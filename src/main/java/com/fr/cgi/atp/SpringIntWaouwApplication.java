@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
@@ -43,13 +44,13 @@ public class SpringIntWaouwApplication {
         return new PublishSubscribeChannel();
     }
 
-    @ServiceActivator(inputChannel = "input", outputChannel = "output")
+    @ServiceActivator(inputChannel = "input", outputChannel = "common")
     public Message<Integer> printPayload(Message<Integer> message) {
         log.debug("Payload : {}", message.getPayload());
         return message;
     }
 
-    @ServiceActivator(inputChannel = "input", outputChannel = "output")
+    @ServiceActivator(inputChannel = "input", outputChannel = "common")
     public Message<Integer> printHeaders(Message<Integer> message) {
         String headerPretty = "Header : ";
         for (Entry<String, Object> header : message.getHeaders().entrySet()) {
@@ -57,6 +58,16 @@ public class SpringIntWaouwApplication {
         }
         log.debug(headerPretty);
         return message;
+    }
+
+    @Router(inputChannel = "common")
+    public String oddOrEven(Message<Integer> message) {
+        return message.getPayload() % 2 == 0 ? "output" : "odd";
+    }
+
+    @Bean
+    public MessageChannel odd() {
+        return new QueueChannel();
     }
 
     @Bean

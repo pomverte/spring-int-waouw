@@ -1,7 +1,7 @@
 # Spring Integration Waouw
 
-                                           printPayload()
-                                          /              \
-    chevron(i) -> Message -> |===input===|                -> |===output===|
-                                          \              /
-                                            printHeader()
+                                           printPayload()                                  |===odd===|
+                                          /              \                                /
+    chevron(i) -> Message -> |===input===|                -> |===common===| -> oddOrEven()
+                                          \              /                                \
+                                            printHeader()                                  |===output===|
