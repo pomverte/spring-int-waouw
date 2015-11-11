@@ -9,11 +9,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.integration.annotation.Poller;
+import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.messaging.handler.annotation.Payload;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +64,22 @@ public class SpringIntWaouwApplication {
 
     @Bean
     public MessageChannel output() {
+        return new QueueChannel();
+    }
+
+    // output is a queue channel, so we need to poll msg from it
+    @Router(inputChannel = "output", poller = @Poller(maxMessagesPerPoll = "2", fixedDelay = "1000") )
+    public String oddOrEven(@Payload Integer payload) {
+        return payload % 2 == 0 ? "exit" : "odd";
+    }
+
+    @Bean
+    public MessageChannel odd() {
+        return new QueueChannel();
+    }
+
+    @Bean
+    public MessageChannel exit() {
         return new QueueChannel();
     }
 
