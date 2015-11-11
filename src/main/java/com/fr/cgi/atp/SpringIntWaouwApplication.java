@@ -1,5 +1,7 @@
 package com.fr.cgi.atp;
 
+import java.util.Map.Entry;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -30,6 +32,16 @@ public class SpringIntWaouwApplication {
     @ServiceActivator(inputChannel = "input", outputChannel = "output")
     public Message<Integer> printPayload(Message<Integer> message) {
         log.debug("Payload : {}", message.getPayload());
+        return message;
+    }
+
+    @ServiceActivator(inputChannel = "input", outputChannel = "output")
+    public Message<Integer> printHeaders(Message<Integer> message) {
+        String headerPretty = "Header : ";
+        for (Entry<String, Object> header : message.getHeaders().entrySet()) {
+            headerPretty += String.format("[%s - %s]", header.getKey(), header.getValue());
+        }
+        log.debug(headerPretty);
         return message;
     }
 
