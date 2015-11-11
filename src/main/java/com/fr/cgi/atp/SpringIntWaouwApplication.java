@@ -12,8 +12,10 @@ import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
+import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -76,6 +78,12 @@ public class SpringIntWaouwApplication {
     @Bean
     public MessageChannel odd() {
         return new QueueChannel();
+    }
+
+    @Transformer(inputChannel = "odd", outputChannel = "output", poller = @Poller(maxMessagesPerPoll = "2",
+            fixedDelay = "1000"))
+    public <T> Message<T> addCommitter(Message<T> message) {
+        return MessageBuilder.fromMessage(message).setHeaderIfAbsent("commiter", "Hong Viet").build();
     }
 
     @Bean
