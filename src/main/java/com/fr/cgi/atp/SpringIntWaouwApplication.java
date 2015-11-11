@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -28,7 +29,11 @@ public class SpringIntWaouwApplication {
         context.close(); // shutdown
     }
 
-    // input channel is a implicit channel (direct channel)
+    @Bean
+    public MessageChannel input() {
+        return new PublishSubscribeChannel();
+    }
+
     @ServiceActivator(inputChannel = "input", outputChannel = "output")
     public Message<Integer> printPayload(Message<Integer> message) {
         log.debug("Payload : {}", message.getPayload());
