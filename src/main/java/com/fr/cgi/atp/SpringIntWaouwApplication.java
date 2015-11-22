@@ -40,7 +40,7 @@ public class SpringIntWaouwApplication {
         context.close(); // shutdown
     }
 
-    @MessagingGateway
+    @MessagingGateway(errorChannel = "errorChannel")
     public interface StarGate {
         @Gateway(requestChannel="mixed")
         void chevron(Integer... value);
@@ -64,6 +64,9 @@ public class SpringIntWaouwApplication {
     @ServiceActivator(inputChannel = "input", outputChannel = "output")
     public Message<Integer> printPayload(Message<Integer> message) {
         log.debug("Payload : {}", message.getPayload());
+        if (message.getPayload().equals(3)) {
+            throw new RuntimeException("Oups something went wrong");
+        }
         return message;
     }
 
