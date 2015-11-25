@@ -1,5 +1,8 @@
 package com.fr.cgi.atp;
 
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 import org.springframework.boot.SpringApplication;
@@ -9,16 +12,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
-import org.springframework.integration.annotation.Poller;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.annotation.Splitter;
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.channel.PublishSubscribeChannel;
 import org.springframework.integration.channel.QueueChannel;
+import org.springframework.integration.scheduling.PollerMetadata;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.scheduling.support.PeriodicTrigger;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,16 +36,24 @@ public class SpringIntWaouwApplication {
         ConfigurableApplicationContext context = SpringApplication.run(SpringIntWaouwApplication.class, args);
 
         StarGate stargate = context.getBean(StarGate.class);
-        for (int i = 0; i < 5; i++) {
-            stargate.chevron(i); // send message
-        }
+        stargate.chevron(0, 1, 2, 3, 4); // send only one message
         context.close(); // shutdown
     }
 
     @MessagingGateway
     public interface StarGate {
-        @Gateway(requestChannel="input")
-        void chevron(Integer value);
+        @Gateway(requestChannel="mixed")
+        void chevron(Integer... value);
+    }
+
+    // mixed is a direct implicit channel
+    @Splitter(inputChannel = "mixed", outputChannel = "input")
+    public List<Integer> banana(Integer... payload) {
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (Integer current : payload) {
+            result.add(current);
+        }
+        return result;
     }
 
     @Bean
@@ -70,7 +83,7 @@ public class SpringIntWaouwApplication {
     }
 
     // output is a queue channel, so we need to poll msg from it
-    @Router(inputChannel = "output", poller = @Poller(maxMessagesPerPoll = "2", fixedDelay = "1000") )
+    @Router(inputChannel = "output")
     public String oddOrEven(@Payload Integer payload) {
         return payload % 2 == 0 ? "exit" : "odd";
     }
@@ -80,8 +93,7 @@ public class SpringIntWaouwApplication {
         return new QueueChannel();
     }
 
-    @Transformer(inputChannel = "odd", outputChannel = "output", poller = @Poller(maxMessagesPerPoll = "2",
-            fixedDelay = "1000"))
+    @Transformer(inputChannel = "odd", outputChannel = "output")
     public <T> Message<T> addCommitter(Message<T> message) {
         return MessageBuilder.fromMessage(message).setHeaderIfAbsent("commiter", "Hong Viet").build();
     }
@@ -89,6 +101,15 @@ public class SpringIntWaouwApplication {
     @Bean
     public MessageChannel exit() {
         return new QueueChannel();
+    }
+
+    // defaultPoller is globally defined
+    @Bean(name = PollerMetadata.DEFAULT_POLLER)
+    public PollerMetadata defaultPoller() {
+        PollerMetadata pollerMetadata = new PollerMetadata();
+        pollerMetadata.setMaxMessagesPerPoll(2);
+        pollerMetadata.setTrigger(new PeriodicTrigger(1000));
+        return pollerMetadata;
     }
 
 }
