@@ -1,28 +1,50 @@
 package com.fr.cgi.atp;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.integration.annotation.Filter;
+import org.springframework.integration.annotation.Gateway;
+import org.springframework.integration.annotation.IntegrationComponentScan;
+import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.integration.annotation.Router;
 import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.integration.annotation.Splitter;
 import org.springframework.integration.annotation.Transformer;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.messaging.Message;
-import org.springframework.messaging.MessageChannel;
-import org.springframework.messaging.support.GenericMessage;
 
+@IntegrationComponentScan // required for @MessagingGateway
 @SpringBootApplication
 public class SpringIntWaouwApplication {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         ConfigurableApplicationContext context = SpringApplication.run(SpringIntWaouwApplication.class, args);
 
-        MessageChannel inputChannel = context.getBean("splitted", MessageChannel.class);
-        for (int i = 0; i < 5; i++) {
-            inputChannel.send(new GenericMessage<Integer>(i));
+        StarGate stargate = context.getBean(StarGate.class);
+        while (true) {
+            stargate.chevron(0, 1, 2, 3, 4); // send only one message
+            System.out.println("");
+            Thread.sleep(5000);
         }
-        context.close();
+    }
+
+    @MessagingGateway
+    public interface StarGate {
+        @Gateway(requestChannel = "mixed")
+        void chevron(Integer... value);
+    }
+
+    @Splitter(inputChannel = "mixed", outputChannel = "splitted")
+    public List<Integer> banana(Integer... payload) {
+        ArrayList<Integer> result = new ArrayList<Integer>();
+        for (Integer current : payload) {
+            result.add(current);
+        }
+        return result;
     }
 
     @Router(inputChannel = "splitted")
