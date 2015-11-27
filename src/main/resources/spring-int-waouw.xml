@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:int="http://www.springframework.org/schema/integration" xmlns:int-jms="http://www.springframework.org/schema/integration/jms"
+    xmlns:int-xml="http://www.springframework.org/schema/integration/xml" xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:int-http="http://www.springframework.org/schema/integration/http"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/integration
+    http://www.springframework.org/schema/integration/spring-integration.xsd
+    http://www.springframework.org/schema/integration/jms
+    http://www.springframework.org/schema/integration/jms/spring-integration-jms.xsd
+   	http://www.springframework.org/schema/integration/xml
+    http://www.springframework.org/schema/integration/xml/spring-integration-xml.xsd
+    http://www.springframework.org/schema/integration/http
+    http://www.springframework.org/schema/integration/http/spring-integration-http.xsd">
+
+    <int:gateway id="stargate" default-request-channel="mixed"></int:gateway>
+    <int:splitter input-channel="mixed" output-channel="splitted" id="banana"></int:splitter>
+
+    <int:channel id="mixed"></int:channel>
+
+    <int:channel id="splitted"></int:channel>
+    <int:router input-channel="splitted" expression="payload%2" id="oddOrEven">
+        <int:mapping value="0" channel="even" />
+        <int:mapping value="1" channel="odd" />
+    </int:router>
+
+    <int:channel id="even"></int:channel>
+    <int:channel id="odd"></int:channel>
+    <int:filter id="twoOnly" input-channel="even" output-channel="exit"></int:filter>
+    <int:header-enricher input-channel="odd" output-channel="exit" id="addCommitter"></int:header-enricher>
+    <int:channel id="exit"></int:channel>
+
+    <int:service-activator input-channel="exit" id="logger"></int:service-activator>
+
+</beans>
